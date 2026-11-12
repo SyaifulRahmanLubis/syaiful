@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Syaiful</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #f8fafc;
+        }
+
+        /* Container Utama */
+        .wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 430px;
+            background-color: #1e293b;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+
+        /* Header / Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+        }
+
+        .code-mode-btn {
+            background-color: #334155;
+            color: #94a3b8;
+            border: 1px solid #475569;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .code-mode-btn.active {
+            background-color: #0284c7;
+            color: white;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+        }
+
+        /* Tampilan Layar Kalkulator */
+        .display-container {
+            background-color: #0f172a;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+            border: 1px solid #1e293b;
+        }
+
+        .display-history {
+            font-size: 0.9rem;
+            color: #64748b;
+            min-height: 20px;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+
+        .display-main {
+            font-size: 2.2rem;
+            color: #38bdf8;
+            font-weight: 600;
+            min-height: 48px;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        /* Grid Tombol Kalkulator */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            padding: 16px 4px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        button:hover {
+            background-color: #334155;
+            border-color: #475569;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button.operator {
+            background-color: #f97316;
+            color: white;
+            border-color: #ea580c;
+        }
+        button.operator:hover { background-color: #ea580c; }
+
+        button.scientific {
+            background-color: #1e293b;
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+        button.scientific:hover { color: #f8fafc; background-color: #334155; }
+
+        button.clear {
+            background-color: #ef4444;
+            color: white;
+            border-color: #dc2626;
+        }
+        button.clear:hover { background-color: #dc2626; }
+
+        button.equal {
+            grid-column: span 2;
+            background-color: #10b981;
+            color: white;
+            border-color: #059669;
+            font-weight: 700;
+        }
+        button.equal:hover { background-color: #059669; }
+
+        /* --- LAYER GAME RAHASIA (SCREEN OVERLAY) --- */
+        .game-overlay {
+            display: none; /* Tersembunyi secara default */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0b0f19;
+            z-index: 100;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 10px;
+        }
+
+        .game-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #10b981;
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .score-board {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f59e0b;
+        }
+
+        .exit-btn {
+            background-color: #334155;
+            color: #f1f5f9;
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .exit-btn:hover { background-color: #ef4444; }
+
+        /* Game Canvas / Area Play */
+        .game-canvas-wrapper {
+            position: relative;
+            background-color: #020617;
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Info & Kontrol untuk Mobile / User */
+        .game-controls {
+            width: 100%;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            padding-top: 10px;
+        }
+
+        .btn-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: 160px;
+            margin: 8px auto 0 auto;
+        }
+
+        .game-pad-btn {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        .game-pad-btn:active { background-color: #10b981; }
+
+        /* Game Over Info Box Overlay */
+        .game-over-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 110;
+        }
+
+        .game-over-box h2 {
+            color: #ef4444;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .game-over-box p {
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .restart-btn:hover { background-color: #059669; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    
+    <!-- === TAMPILAN 1: KALKULATOR === -->
+    <div class="top-bar">
+        <span class="brand">Kalkulator Syaiful</span>
+        <button class="code-mode-btn" id="codeBtn" onclick="toggleCodeMode()">Code Mode</button>
+    </div>
+
+    <div class="display-container">
+        <div class="display-history" id="history"></div>
+        <div class="display-main" id="display">0</div>
+    </div>
+
+    <div class="buttons-grid">
+        <!-- Baris 1 -->
+        <button class="scientific" onclick="inputFunc('sin')">sin</button>
+        <button class="scientific" onclick="inputFunc('cos')">cos</button>
+        <button class="scientific" onclick="inputFunc('tan')">tan</button>
+        <button class="scientific" onclick="inputConstant('π')">π</button>
+        <button class="clear" onclick="clearDisplay()">C</button>
+
+        <!-- Baris 2 -->
+        <button class="scientific" onclick="inputFunc('log')">log</button>
+        <button class="scientific" onclick="inputFunc('ln')">ln</button>
+        <button class="scientific" onclick="inputOp('^')">xʸ</button>
+        <button class="scientific" onclick="inputFunc('sqrt')">√</button>
+        <button class="operator" onclick="backspace()">←</button>
+
+        <!-- Baris 3 -->
+        <button onclick="inputNum('7')">7</button>
+        <button onclick="inputNum('8')">8</button>
+        <button onclick="inputNum('9')">9</button>
+        <button class="operator" onclick="inputOp('/')">÷</button>
+        <button class="scientific" onclick="inputFunc('sqr')">x²</button>
+
+        <!-- Baris 4 -->
+        <button onclick="inputNum('4')">4</button>
+        <button onclick="inputNum('5')">5</button>
+        <button onclick="inputNum('6')">6</button>
+        <button class="operator" onclick="inputOp('*')">×</button>
+        <button class="scientific" onclick="inputFunc('fact')">!</button>
+
+        <!-- Baris 5 -->
+        <button onclick="inputNum('1')">1</button>
+        <button onclick="inputNum('2')">2</button>
+        <button onclick="inputNum('3')">3</button>
+        <button class="operator" onclick="inputOp('-')">-</button>
+        <button class="scientific" onclick="inputConstant('e')">e</button>
+
+        <!-- Baris 6 -->
+        <button onclick="inputNum('0')">0</button>
+        <button onclick="inputNum('.')">.</button>
+        <button class="operator" onclick="inputOp('+')">+</button>
+        <button class="equal" onclick="calculate()">=</button>
+    </div>
+
+    <!-- === TAMPILAN 2: GAME RAHASIA (SNAKE GAME RETRO) === -->
+    <div class="game-overlay" id="gameOverlay">
+        <div class="game-header">
+            <span class="game-title">Retro Snake 🐍</span>
+            <span class="score-board">Skor: <span id="scoreText">0</span></span>
+            <button class="exit-btn" onclick="exitGame()">Keluar</button>
+        </div>
+
+        <div class="game-canvas-wrapper">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <!-- Modal Game Over -->
+            <div class="game-over-box" id="gameOverBox">
+                <h2>GAME OVER</h2>
+                <p>Skor Akhir Kamu: <span id="finalScoreText">0</span></p>
+                <button class="restart-btn" onclick="resetGame()">Main Lagi</button>
+            </div>
+        </div>
+
+        <!-- Panel Kontrol untuk Layar Sentuh / HP -->
+        <div class="game-controls">
+            <p>Gunakan tombol arah atau keyboard (W,A,S,D / Arrow)</p>
+            <div class="btn-controls-grid">
+                <div style="grid-column: span 3; display: grid; grid-template-columns: repeat(3, 1fr);">
+                    <div></div>
+                    <button class="game-pad-btn" onclick="changeDirection('UP')">▲</button>
+                    <div></div>
+                </div>
+                <button class="game-pad-btn" onclick="changeDirection('LEFT')">◀️</button>
+                <button class="game-pad-btn" onclick="changeDirection('DOWN')">▼</button>
+                <button class="game-pad-btn" onclick="changeDirection('RIGHT')">▶️</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* -------------------------------------------
+       LOGIKA UTAMA KALKULATOR
+       ------------------------------------------- */
+    const display = document.getElementById('display');
+    const historyDisplay = document.getElementById('history');
+    const codeBtn = document.getElementById('codeBtn');
+    const gameOverlay = document.getElementById('gameOverlay');
+    
+    let currentInput = '0';
+    let isCalculated = false;
+    let isCodeModeActive = false;
+
+    function toggleCodeMode() {
+        isCodeModeActive = !isCodeModeActive;
+        if (isCodeModeActive) {
+            codeBtn.classList.add('active');
+            currentInput = '0';
+        } else {
+            codeBtn.classList.remove('active');
+            currentInput = '0';
+        }
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        display.innerText = currentInput;
+        
+        // PINTU RAHASIA: Jika Code Mode Aktif & user mengetik '0000'
+        if (isCodeModeActive && currentInput === '0000') {
+            launchSecretGame();
+        }
+    }
+
+    // --- BAGIAN YANG SUDAH DIPERBAIKI ---
+    function inputNum(num) {
+        if (isCodeModeActive) {
+            if (currentInput === '0' && num !== '0') {
+                currentInput = num;
+            } else {
+                currentInput += num;
+            }
+        } else {
+            if (currentInput === '0' || isCalculated) {
+                currentInput = num;
+                isCalculated = false;
+            } else {
+                currentInput += num;
+            }
+        }
+        updateDisplay();
+    }
+
+    function inputOp(op) {
+        isCalculated = false;
+        const lastChar = currentInput.slice(-1);
+        if (['+', '-', '*', '/', '^'].includes(lastChar)) {
+            currentInput = currentInput.slice(0, -1) + op;
+        } else {
+            currentInput += op;
+        }
+        updateDisplay();
+    }
+
+    function inputConstant(c) {
+        if (currentInput === '0' || isCalculated) {
+            currentInput = c;
+            isCalculated = false;
+        } else {
+            currentInput += c;
+        }
+        updateDisplay();
+    }
+
+    function clearDisplay() {
+        currentInput = '0';
+        historyDisplay.innerText = '';
+        updateDisplay();
+    }
+
+    function backspace() {
+        if (currentInput.length > 1) currentInput = currentInput.slice(0, -1);
+        else currentInput = '0';
+        updateDisplay();
+    }
+
+    function inputFunc(funcName) {
+        let val = evalSafe(currentInput);
+        historyDisplay.innerText = funcName + '(' + currentInput + ')';
+        
+        switch(funcName) {
+            case 'sin': currentInput = Math.sin(val * Math.PI / 180).toFixed(6); break;
+            case 'cos': currentInput = Math.cos(val * Math.PI / 180).toFixed(6); break;
+            case 'tan': currentInput = Math.tan(val * Math.PI / 180).toFixed(6); break;
+            case 'log': currentInput = Math.log10(val).toFixed(6); break;
+            case 'ln': currentInput = Math.log(val).toFixed(6); break;
+            case 'sqrt': currentInput = Math.sqrt(val).toFixed(6); break;
+            case 'sqr': currentInput = Math.pow(val, 2).toString(); break;
+            case 'fact': currentInput = factorial(parseInt(val)).toString(); break;
+        }
+        if (currentInput.includes('.')) {
+            currentInput = parseFloat(currentInput).toString();
+        }
+        isCalculated = true;
+        updateDisplay();
+    }
+
+    function factorial(n) {
+        if (n < 0) return 'Error';
+        if (n === 0 || n === 1) return 1;
+        let r = 1;
+        for (let i = 2; i <= n; i++) r *= i;
+        return r;
+    }
+
+    function evalSafe(expr) {
+        let fmt = expr.replace(/π/g, 'Math.PI').replace(/e/g, 'Math.E').replace(/\^/g, '**');
+        try { return eval(fmt); } catch { return 0; }
+    }
+
+    function calculate() {
+        historyDisplay.innerText = currentInput + ' =';
+        let res = evalSafe(currentInput);
+        currentInput = res.toString();
+        isCalculated = true;
+        updateDisplay();
+    }
+
+
+    /* -------------------------------------------
+       LOGIKA GAME RAHASIA: SNAKE GAME ENGINE
+       ------------------------------------------- */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreText = document.getElementById('scoreText');
+    const finalScoreText = document.getElementById('finalScoreText');
+    const gameOverBox = document.getElementById('gameOverBox');
+
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+    
+    let snake = [];
+    let food = { x: 0, y: 0 };
+    let dx = gridSize;
+    let dy = 0;
+    let score = 0;
+    let gameInterval;
+    let nextDirection = 'RIGHT';
+
+    function launchSecretGame() {
+        gameOverlay.style.display = 'flex';
+        resetGame();
+        window.addEventListener('keydown', handleKeyDown);
+    }
+
+    function exitGame() {
+        gameOverlay.style.display = 'none';
+        clearInterval(gameInterval);
+        window.removeEventListener('keydown', handleKeyDown);
+        toggleCodeMode();
+    }
+
+    function resetGame() {
+        snake = [
+            { x: gridSize * 5, y: gridSize * 10 },
+            { x: gridSize * 4, y: gridSize * 10 },
+            { x: gridSize * 3, y: gridSize * 10 }
+        ];
+        dx = gridSize;
+        dy = 0;
+        nextDirection = 'RIGHT';
+        score = 0;
+        scoreText.innerText = score;
+        gameOverBox.style.display = 'none';
+        spawnFood();
+        clearInterval(gameInterval);
+        gameInterval = setInterval(updateGameLoop, 120);
+    }
+
+    function spawnFood() {
+        food.x = Math.floor(Math.random() * tileCount) * gridSize;
+        food.y = Math.floor(Math.random() * tileCount) * gridSize;
+        
+        snake.forEach(part => {
+            if (part.x === food.x && part.y === food.y) {
+                spawnFood();
+            }
+        });
+    }
+
+    function updateGameLoop() {
+        if (nextDirection === 'LEFT' && dx === 0) { dx = -gridSize; dy = 0; }
+        if (nextDirection === 'RIGHT' && dx === 0) { dx = gridSize; dy = 0; }
+        if (nextDirection === 'UP' && dy === 0) { dx = 0; dy = -gridSize; }
+        if (nextDirection === 'DOWN' && dy === 0) { dx = 0; dy = gridSize; }
+
+        const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+        
+        if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || checkSelfCollision(head)) {
+            gameOver();
+            return;
+        }
+
+        snake.unshift(head);
+
+        if (head.x === food.x && head.y === food.y) {
+            score += 10;
+            scoreText.innerText = score;
+            spawnFood();
+        } else {
+            snake.pop();
+        }
+
+        drawCanvas();
+    }
+
+    function checkSelfCollision(head) {
+        for (let i = 0; i < snake.length; i++) {
+            if (snake[i].x === head.x && snake[i].y === head.y) return true;
+        }
+        return false;
+    }
+
+    function drawCanvas() {
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < tileCount; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * gridSize, 0);
+            ctx.lineTo(i * gridSize, canvas.height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, i * gridSize);
+            ctx.lineTo(canvas.width, i * gridSize);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = '#f43f5e';
+        ctx.shadowColor = '#f43f5e';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(food.x + gridSize/2, food.y + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 4;
+        snake.forEach((part, index) => {
+            if (index === 0) {
+                ctx.fillStyle = '#10b981';
+                ctx.shadowColor = '#10b981';
+            } else {
+                ctx.fillStyle = '#059669';
+                ctx.shadowColor = '#059669';
+            }
+            ctx.fillRect(part.x + 1, part.y + 1, gridSize - 2, gridSize - 2);
+        });
+        
+        ctx.shadowBlur = 0;
+    }
+
+    function changeDirection(dir) {
+        if (dir === 'LEFT' && dx === 0) nextDirection = 'LEFT';
+        if (dir === 'RIGHT' && dx === 0) nextDirection = 'RIGHT';
+        if (dir === 'UP' && dy === 0) nextDirection = 'UP';
+        if (dir === 'DOWN' && dy === 0) nextDirection = 'DOWN';
+    }
+
+    function handleKeyDown(e) {
+        if (['ArrowUp', 'KeyW'].includes(e.code)) changeDirection('UP');
+        if (['ArrowDown', 'KeyS'].includes(e.code)) changeDirection('DOWN');
+        if (['ArrowLeft', 'KeyA'].includes(e.code)) changeDirection('LEFT');
+        if (['ArrowRight', 'KeyD'].includes(e.code)) changeDirection('RIGHT');
+        
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            e.preventDefault();
+        }
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        finalScoreText.innerText = score;
+        gameOverBox.style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>
